@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chennai Home Value Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --card: #1c2030;
+    --border: #2a3040;
+    --accent: #e8a045;
+    --accent2: #c45c2a;
+    --text: #e8e4dc;
+    --muted: #7a8090;
+    --green: #4caf7d;
+    --red: #e05c5c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(232,160,69,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(196,92,42,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .logo-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #f5ead6 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+  }
+
+  .stat-pill .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-pill .label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* Main grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Form card */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+  }
+
+  .form-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 28px;
+    color: var(--text);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  select, input[type="number"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  select option { background: #1c2030; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Radio toggle for status */
+  .toggle-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .toggle-btn.active {
+    border-color: var(--accent);
+    background: rgba(232,160,69,0.1);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Predict button */
+  .predict-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #000;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .predict-btn:hover { opacity: 0.9; }
+  .predict-btn:active { transform: scale(0.99); }
+  .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Result card */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 400px;
+  }
+
+  .result-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-width: 220px;
+  }
+
+  /* Price display */
+  .price-display {
+    background: linear-gradient(135deg, rgba(232,160,69,0.12), rgba(196,92,42,0.08));
+    border: 1px solid rgba(232,160,69,0.3);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .price-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .price-range {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Analysis text */
+  .analysis-section {
+    flex: 1;
+  }
+
+  .analysis-section h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .analysis-text {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* Factor tags */
+  .factor-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .factor-tag {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  .factor-tag.pos {
+    background: rgba(76,175,125,0.15);
+    border: 1px solid rgba(76,175,125,0.3);
+    color: var(--green);
+  }
+
+  .factor-tag.neg {
+    background: rgba(224,92,92,0.1);
+    border: 1px solid rgba(224,92,92,0.25);
+    color: var(--red);
+  }
+
+  /* Loading animation */
+  .loading-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0 32px;
+    margin-top: 56px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  footer span { color: var(--accent); }
+
+  /* Scrollbar */
+  select::-webkit-scrollbar { width: 6px; }
+  select::-webkit-scrollbar-track { background: var(--surface); }
+  select::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-tag">🏙 Chennai Real Estate</div>
+    <h1>Home Value<br>Estimator</h1>
+    <p>AI-powered price prediction for Chennai properties</p>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="num">2,620+</div>
+      <div class="label">Properties Analyzed</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num">178</div>
+      <div class="label">Localities Covered</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num">₹12L–₹14Cr</div>
+      <div class="label">Price Range</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num">AI</div>
+      <div class="label">Powered Prediction</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Form -->
+    <div class="form-card">
+      <h2>Property Details</h2>
+
+      <div class="form-group">
+        <label>Location / Locality</label>
+        <select id="location">
+          <option value="">Select a locality…</option>
+          <option value="adambakam">Adambakam</option><option value="adyar">Adyar</option><option value="agaramthen">Agaramthen</option><option value="alandur">Alandur</option><option value="alwarpet">Alwarpet</option><option value="ambattur">Ambattur</option><option value="ambattur industrial estate">Ambattur Industrial Estate</option><option value="aminjikarai">Aminjikarai</option><option value="anakaputhur">Anakaputhur</option><option value="anna nagar">Anna Nagar</option><option value="anna nagar east">Anna Nagar East</option><option value="avadi">Avadi</option><option value="ayanambakkam">Ayanambakkam</option><option value="ayanavaram">Ayanavaram</option><option value="ayapakkam">Ayapakkam</option><option value="besant nagar">Besant Nagar</option><option value="chetpet">Chetpet</option><option value="chitlapakkam">Chitlapakkam</option><option value="chromepet">Chromepet</option><option value="east tambaram">East Tambaram</option><option value="egmore">Egmore</option><option value="elandanur">Elandanur</option><option value="gerugambakkam">Gerugambakkam</option><option value="gopalapuram">Gopalapuram</option><option value="gowrivakkam">Gowrivakkam</option><option value="guduvancheri">Guduvancheri</option><option value="guindy">Guindy</option><option value="iyappanthangal">Iyappanthangal</option><option value="iyyappanthangal">Iyyappanthangal</option><option value="jafferkhanpet">Jafferkhanpet</option><option value="kanathur reddikuppam">Kanathur Reddikuppam</option><option value="kandigai">Kandigai</option><option value="karapakkam">Karapakkam</option><option value="kattankulathur">Kattankulathur</option><option value="kattupakkam">Kattupakkam</option><option value="keelkattalai">Keelkattalai</option><option value="kelambakkam">Kelambakkam</option><option value="kilpauk">Kilpauk</option><option value="kodambakkam">Kodambakkam</option><option value="kodungaiyur west">Kodungaiyur West</option><option value="kolapakkam">Kolapakkam</option><option value="kolathur">Kolathur</option><option value="korattur">Korattur</option><option value="kotivakkam">Kotivakkam</option><option value="kotturpuram">Kotturpuram</option><option value="kovalam">Kovalam</option><option value="kovilambakkam">Kovilambakkam</option><option value="kovur">Kovur</option><option value="koyambedu">Koyambedu</option><option value="kundrathur">Kundrathur</option><option value="kuthambakkam">Kuthambakkam</option><option value="madambakkam">Madambakkam</option><option value="madhavaram">Madhavaram</option><option value="madipakkam">Madipakkam</option><option value="mahindra world city">Mahindra World City</option><option value="mambakkam">Mambakkam</option><option value="manapakkam">Manapakkam</option><option value="mangadu">Mangadu</option><option value="maraimalai nagar">Maraimalai Nagar</option><option value="medavakkam">Medavakkam</option><option value="mogappair">Mogappair</option><option value="moolacheri">Moolacheri</option><option value="moolakadai">Moolakadai</option><option value="mugalivakkam">Mugalivakkam</option><option value="nallambakkam">Nallambakkam</option><option value="nandambakkam">Nandambakkam</option><option value="nanganallur">Nanganallur</option><option value="nanmangalam">Nanmangalam</option><option value="navallur">Navallur</option><option value="nesapakkam">Nesapakkam</option><option value="nungambakkam">Nungambakkam</option><option value="oragadam industrial corridor">Oragadam Industrial Corridor</option><option value="ottiyabakkam">Ottiyabakkam</option><option value="ottiyambakkam">Ottiyambakkam</option><option value="padappai">Padappai</option><option value="padur">Padur</option><option value="pallavaram">Pallavaram</option><option value="pallikaranai">Pallikaranai</option><option value="pammal">Pammal</option><option value="pattabiram">Pattabiram</option><option value="peerakankaranai">Peerakankaranai</option><option value="perambur">Perambur</option><option value="periyar nagar">Periyar Nagar</option><option value="perumalpattu">Perumalpattu</option><option value="perumbakkam">Perumbakkam</option><option value="perungalathur">Perungalathur</option><option value="perungudi">Perungudi</option><option value="poonamallee">Poonamallee</option><option value="porur">Porur</option><option value="pozhichalur">Pozhichalur</option><option value="pudupakkam">Pudupakkam</option><option value="purasaiwakkam">Purasaiwakkam</option><option value="purasawalkam">Purasawalkam</option><option value="ragavendra colony">Ragavendra Colony</option><option value="raja annamalai puram">Raja Annamalai Puram</option><option value="rajakilpakkam">Rajakilpakkam</option><option value="ramapuram">Ramapuram</option><option value="ramavaram">Ramavaram</option><option value="rathinamangalam">Rathinamangalam</option><option value="royapettah">Royapettah</option><option value="saidapet">Saidapet</option><option value="saligramam">Saligramam</option><option value="selaiyur">Selaiyur</option><option value="sembakkam">Sembakkam</option><option value="semmancheri">Semmancheri</option><option value="shenoy nagar">Shenoy Nagar</option><option value="sholinganallur">Sholinganallur</option><option value="singaperumal koil">Singaperumal Koil</option><option value="siruseri">Siruseri</option><option value="sithalapakkam">Sithalapakkam</option><option value="t nagar">T Nagar</option><option value="thaiyur">Thaiyur</option><option value="thalambur">Thalambur</option><option value="thandalam">Thandalam</option><option value="tharapakkam">Tharapakkam</option><option value="thirumalpur">Thirumalpur</option><option value="thirumazhisai">Thirumazhisai</option><option value="thirumullaivoyal">Thirumullaivoyal</option><option value="thiruporur">Thiruporur</option><option value="thiruvanmiyur">Thiruvanmiyur</option><option value="thiruverkadu">Thiruverkadu</option><option value="thoraipakkam omr">Thoraipakkam Omr</option><option value="tiruvottiyur">Tiruvottiyur</option><option value="urapakkam">Urapakkam</option><option value="vadanemmeli">Vadanemmeli</option><option value="vadapalani">Vadapalani</option><option value="valasaravakkam">Valasaravakkam</option><option value="vanagaram">Vanagaram</option><option value="velachery">Velachery</option><option value="velappanchavadi">Velappanchavadi</option><option value="vengaivasal">Vengaivasal</option><option value="vengambakkam">Vengambakkam</option><option value="veppampattu">Veppampattu</option><option value="virugambakkam">Virugambakkam</option><option value="west mambalam">West Mambalam</option><option value="west tambaram">West Tambaram</option><option value="tambaram west">Tambaram West</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>BHK</label>
+          <select id="bhk">
+            <option value="1">1 BHK</option>
+            <option value="2" selected>2 BHK</option>
+            <option value="3">3 BHK</option>
+            <option value="4">4 BHK</option>
+            <option value="5">5 BHK</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <select id="bathroom">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Built-up Area (sq ft)</label>
+        <input type="number" id="area" placeholder="e.g. 1200" min="200" max="10000" value="1200">
+      </div>
+
+      <div class="form-group">
+        <label>Property Age (years)</label>
+        <input type="number" id="age" placeholder="e.g. 3" min="0" max="50" value="2">
+      </div>
+
+      <div class="form-group">
+        <label>Builder / Developer</label>
+        <select id="builder">
+          <option value="">Select a builder…</option>
+          <option value="24k realtors">24k Realtors</option><option value="aks housing dedvelopment pvt ltd">Aks Housing Dedvelopment Pvt Ltd</option><option value="aks realty services">Aks Realty Services</option><option value="arb homes">Arb Homes</option><option value="advaita homes">Advaita Homes</option><option value="alliance group">Alliance Group</option><option value="amarprakash developers pvt ltd">Amarprakash Developers Pvt Ltd</option><option value="appaswamy real estate">Appaswamy Real Estate</option><option value="asset tree homes">Asset Tree Homes</option><option value="bscpl infrastructure ltd">Bscpl Infrastructure Ltd</option><option value="baashyaam group">Baashyaam Group</option><option value="bala">Bala</option><option value="balaji">Balaji</option><option value="balasubramani">Balasubramani</option><option value="bharathi construction">Bharathi Construction</option><option value="bricksburg">Bricksburg</option><option value="budget housing and properties">Budget Housing And Properties</option><option value="casagrand builder private limited">Casagrand Builder Private Limited</option><option value="chennai gated community">Chennai Gated Community</option><option value="dac promoters">Dac Promoters</option><option value="dj properties">Dj Properties</option><option value="dee star properties">Dee Star Properties</option><option value="dhivagaran">Dhivagaran</option><option value="doshi housing">Doshi Housing</option><option value="dugar housing builders">Dugar Housing Builders</option><option value="ek realtors">Ek Realtors</option><option value="elite nisha">Elite Nisha</option><option value="gj estates">Gj Estates</option><option value="gtk foundations">Gtk Foundations</option><option value="global homes">Global Homes</option><option value="grandstyle constructions">Grandstyle Constructions</option><option value="hm homes">Hm Homes</option><option value="hansa estates">Hansa Estates</option><option value="homefirst">Homefirst</option><option value="interface properties">Interface Properties</option><option value="india builders limited">India Builders Limited</option><option value="individual agent">Individual Agent</option><option value="info rich">Info Rich</option><option value="isha homes">Isha Homes</option><option value="ja associates">Ja Associates</option><option value="jd properties">Jd Properties</option><option value="jones foundations">Jones Foundations</option><option value="jones foundation private limited">Jones Foundation Private Limited</option><option value="kamalam builder pvt ltd">Kamalam Builder Pvt Ltd</option><option value="karthick">Karthick</option><option value="karuppaswamy builders">Karuppaswamy Builders</option><option value="khurinji homes">Khurinji Homes</option><option value="kkk landmark">Kkk Landmark</option><option value="kochar homes pvt ltd">Kochar Homes Pvt Ltd</option><option value="lifestyle housing">Lifestyle Housing</option><option value="luxclusive homes">Luxclusive Homes</option><option value="mc foundation">Mc Foundation</option><option value="mehta real estate chennai llp">Mehta Real Estate Chennai Llp</option><option value="mp developers">Mp Developers</option><option value="mayances construction and engineering services">Mayances Construction And Engineering Services</option><option value="mohan">Mohan</option><option value="mrpincode">Mrpincode</option><option value="murali">Murali</option><option value="nagaraj">Nagaraj</option><option value="naveen">Naveen</option><option value="navin housing properties p ltd">Navin Housing Properties P Ltd</option><option value="olympia group">Olympia Group</option><option value="ps srijan developers">Ps Srijan Developers</option><option value="pacifica companies">Pacifica Companies</option><option value="pon mariappan">Pon Mariappan</option><option value="poojaa foundation">Poojaa Foundation</option><option value="prabha homes">Prabha Homes</option><option value="prasanna">Prasanna</option><option value="prestige estates projects ltd">Prestige Estates Projects Ltd</option><option value="prince foundations ltd">Prince Foundations Ltd</option><option value="propsource realty private limited">Propsource Realty Private Limited</option><option value="pushkar properties pvt ltd">Pushkar Properties Pvt Ltd</option><option value="r venkatesan">R Venkatesan</option><option value="realty india">Realty India</option><option value="radiance realty developers">Radiance Realty Developers</option><option value="radiance realty developers india ltd">Radiance Realty Developers India Ltd</option><option value="ram">Ram</option><option value="ramaniyam real estate builders">Ramaniyam Real Estate Builders</option><option value="right angle properties">Right Angle Properties</option><option value="royal square">Royal Square</option><option value="sp homes pvt ltd">Sp Homes Pvt Ltd</option><option value="ss properties">Ss Properties</option><option value="sandhya">Sandhya</option><option value="saradeuz realty constructions">Saradeuz Realty Constructions</option><option value="sarashwathi construction">Sarashwathi Construction</option><option value="saravan gk">Saravan Gk</option><option value="selvakumar">Selvakumar</option><option value="shatapatri estates pvt ltd">Shatapatri Estates Pvt Ltd</option><option value="shiva">Shiva</option><option value="shri raman developers">Shri Raman Developers</option><option value="south zone realty consulting pvt ltd">South Zone Realty Consulting Pvt Ltd</option><option value="swamaan developers">Swamaan Developers</option><option value="swaminathan">Swaminathan</option><option value="tellus foundation">Tellus Foundation</option><option value="the nest builder">The Nest Builder</option><option value="traventure homes pvt ltd">Traventure Homes Pvt Ltd</option><option value="urban tree infrastructures">Urban Tree Infrastructures</option><option value="urbando housing llp">Urbando Housing Llp</option><option value="urbanrise">Urbanrise</option><option value="vgk builders pvt ltd">Vgk Builders Pvt Ltd</option><option value="vnr homes">Vnr Homes</option><option value="velan housing properties">Velan Housing Properties</option><option value="vijay raja homes private limited">Vijay Raja Homes Private Limited</option><option value="vinay asrani">Vinay Asrani</option><option value="vishnu foundation ltd">Vishnu Foundation Ltd</option><option value="others">Others</option><option value="seller">Seller</option><option value="smartassetsindia">Smartassetsindia</option><option value="viswaraj">Viswaraj</option>
+        </select>
+      </div>
+
+      <button class="predict-btn" id="predictBtn" onclick="predict()">
+        ✦ Estimate Property Value
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <h2>Valuation Result</h2>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🏠</div>
+        <p>Fill in the property details and click Estimate to get an AI-powered price prediction.</p>
+      </div>
+      <div id="resultContent" style="display:none; flex:1; display:none; flex-direction:column; gap:18px;">
+        <div class="price-display">
+          <div class="price-label">Estimated Price</div>
+          <div class="price-value" id="priceValue">—</div>
+          <div class="price-range" id="priceRange"></div>
+        </div>
+        <div class="analysis-section">
+          <h3>AI Analysis</h3>
+          <div class="analysis-text" id="analysisText"></div>
+          <div class="factor-tags" id="factorTags"></div>
+        </div>
+      </div>
+      <div id="loadingState" style="display:none; flex:1; align-items:center; justify-content:center; flex-direction:column; gap:10px;">
+        <div style="color: var(--muted); font-size:0.9rem;">Analysing property…</div>
+        <div class="loading-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Built for <span>Chennai</span> real estate — Powered by AI · Data based on 2,620+ listings
+  </footer>
+</div>
+
+<script>
+async function predict() {
+  const location = document.getElementById('location').value;
+  const builder  = document.getElementById('builder').value;
+  const bhk      = parseInt(document.getElementById('bhk').value);
+  const bathroom = parseInt(document.getElementById('bathroom').value);
+  const area     = parseFloat(document.getElementById('area').value);
+  const age      = parseInt(document.getElementById('age').value);
+
+  if (!location) { alert('Please select a locality.'); return; }
+  if (!area || area < 100) { alert('Please enter a valid area (sq ft).'); return; }
+
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('resultContent').style.display = 'none';
+  document.getElementById('loadingState').style.display  = 'flex';
+  document.getElementById('predictBtn').disabled = true;
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location, builder, bhk, bathroom, area, age })
+    });
+
+    if (!res.ok) throw new Error('Server error');
+    const data = await res.json();
+
+    document.getElementById('priceValue').textContent   = data.price_formatted;
+    document.getElementById('priceRange').textContent   = 'Range: ' + data.range_formatted;
+
+    const locName = document.getElementById('location').options[document.getElementById('location').selectedIndex].text;
+    document.getElementById('analysisText').textContent =
+      `Estimated for ${locName}, ${bhk}BHK, ${area} sqft, age ${age} yr using trained Linear Regression model.`;
+
+    const tagsEl = document.getElementById('factorTags');
+    tagsEl.innerHTML = '';
+    const pos = [], neg = [];
+    if (area >= 1500) pos.push('Large area');
+    if (area < 600)   neg.push('Small area');
+    if (bhk >= 3)     pos.push(bhk + 'BHK spacious');
+    if (age <= 2)     pos.push('New property');
+    if (age > 10)     neg.push('Older property');
+    pos.forEach(f => tagsEl.innerHTML += `<span class="factor-tag pos">↑ ${f}</span>`);
+    neg.forEach(f => tagsEl.innerHTML += `<span class="factor-tag neg">↓ ${f}</span>`);
+
+    document.getElementById('loadingState').style.display  = 'none';
+    document.getElementById('resultContent').style.display = 'flex';
+
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('emptyState').style.display   = 'flex';
+    document.getElementById('emptyState').querySelector('p').textContent = 'Something went wrong. Please try again.';
+    console.error(err);
+  }
+
+  document.getElementById('predictBtn').disabled = false;
+}
+</script>
+</body>
+</html>
